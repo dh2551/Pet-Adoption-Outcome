@@ -27,19 +27,16 @@ adopted_pre_2020_v1 <- adopted_all_pre_2020 %>%
   filter(status_changed_at != published_at,
          type == 'Cat' | type == 'Dog',
          type == species) %>%
-  select(-organization_animal_id, -tags, -photos, -videos, -distance, -coat,
-         -breeds.secondary, -colors.secondary, -colors.tertiary,-attributes.declawed, 
+  select(-coat, -tags,-organization_animal_id, -photos, -videos, -distance, 
+         -breeds.secondary, -colors.secondary, -colors.tertiary,-attributes.declawed, # Just changed the order features
          -primary_photo_cropped.small, -primary_photo_cropped.medium,       ##not sure about dropping these
-         -primary_photo_cropped.large, -primary_photo_cropped.full,         ##not sure about dropping these
-         -contact.address.address1, -contact.address.address2, -contact.address.postcode)
+         -primary_photo_cropped.large, -primary_photo_cropped.full,         ##we should drop them
+         -contact.address.address1, -contact.address.address2, -contact.address.postcode,
+         -url,-species,-`_links.self.href`, -`_links.type.href`, -`_links.organization.href`,
+         -name,-colors.primary, -country) # i don't think name matters; there are 14999 NAs for color, and I still not sure if we keep it; there are only 1822 for CA, I think we drop it
 
 #check again
 empty_rate_2 <- adopted_pre_2020_v1 %>% summarise_all(list(name = ~sum(is.na(.))/length(.)))
-
-# drop columns that are useless 
-adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
-  select(-url,-species,-`_links.self.href`, -`_links.type.href`, -`_links.organization.href`) 
-
 # re-level columns 
 #   age: baby 1, young 2, adult 3, senior 4 (as.factor)
 #   size: small 1, medium 2, large 3, extra large 4 (as.factor)
