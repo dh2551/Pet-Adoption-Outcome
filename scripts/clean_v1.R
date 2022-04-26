@@ -91,5 +91,56 @@ description_sum <- description_count %>% group_by(id) %>% summarise(pos_count = 
 adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_sum) 
 
 
+##
+
+cat_breed <- adopted_pre_2020_v1 %>% 
+  filter(type == 'Cat') %>%
+  distinct(breeds.primary)
+
+cat_breed_check <- adopted_pre_2020_v1 %>%
+  filter(type == 'Cat') %>% 
+  select(id, type, breeds.primary, breeds.mixed)
+
+dog_breed_check <- adopted_pre_2020_v1 %>%
+  filter(type == 'Dog') %>% 
+  select(id, type, breeds.primary, breeds.mixed)
+
+
+dog_breed <- adopted_pre_2020_v1 %>%
+  filter(type == 'Dog') %>%
+  distinct(breeds.primary)
+
+# https://humanepro.org/page/pets-by-the-numbers
+
+# if breed is "mutt"/mixed bred, then breeds_bin = 0 
+# these breeds include dsh, dmh, dlh, torbie, calico, tabby
+# if breed is "pure", then breeds_bin = 1
+# tiger, hemingway can be either purebred or mutt (tiger & polydactyl are type of cat not cat breeds)
+# for these two we will examine "breed.mixed"
+
+breeds_binary <- adopted_pre_2020_v1 %>%
+  mutate(breeds_bin = case_when(breeds.primary == 'Domestic Short Hair' | breeds.primary ==  'Domestic Medium Hair' |
+                                  breeds.primary == 'Domestic Long Hair'| breeds.primary ==  'Torbie' | 
+                                  breeds.primary == 'Calico' | breeds.primary == 'Tabby' | 
+                                  breeds.primary == 'Tortoiseshell' | breeds.primary == 'Dilute Tortoiseshell' | 
+                                  breeds.primary == 'Dilute Calico' | breeds.primary == 'Tuxedo' ~ 0 ,
+                                breeds.primary == 'Tiger' & breeds.mixed == TRUE ~ 0,
+                                breeds.primary == 'Extra-Toes Cat / Hemingway Polydactyl' & breeds.mixed == TRUE ~ 0 ,
+                                breeds.primary == 'American Bulldog' | breeds.primary == 'American Buly' | 
+                                  breeds.primary == 'Boxer' |  breeds.primary == 'Bull Terrier' | 
+                                  breeds.primary == 'Boston Terrier' | breeds.primary == 'Bullmastiff' | 
+                                  breeds.primary == 'Cane Corso' | breeds.primary == 'English Bulldog' |
+                                  breeds.primary == 'Mixed Breed' | breeds.primary == 'Pit Bull Terrier' | 
+                                  breeds.primary == 'Staffordshire Bull Terrier' ~ 0, 
+                                TRUE ~ 1)) %>%
+  select(id, breeds_bin, breeds.primary, breeds.mixed)                          
+
+check <- breeds_binary %>%
+  filter(breeds_bin == 1, breeds.mixed == TRUE)
+
+table(breeds_binary$breeds_bin)
+
+
+
 
 
