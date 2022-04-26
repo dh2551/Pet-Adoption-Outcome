@@ -54,15 +54,21 @@ adopted_pre_2020_v1 <- adopted_pre_2020_full %>%
 #   size: small 1, medium 2, large 3, extra large 4 (as.factor)
 #   gender: male 1, female 2 (as.factor)
 #   environment.child/dog/cat: true 1, false 0, na--> uncertain 2 (as.factor)
+adopted_pre_2020_v1$age <- factor(adopted_pre_2020_v1$age,c("Baby","Young","Adult","Senior"))
+adopted_pre_2020_v1$size <- factor(adopted_pre_2020_v1$size,c("Small","Medium","Large","Extra Large"))
+adopted_pre_2020_v1$gender <- factor(adopted_pre_2020_v1$gender,c("Male","Female"))
+adopted_pre_2020_v1$environment.children <- factor(adopted_pre_2020_v1$environment.children,c("TRUE","FALSE","NA"))
+adopted_pre_2020_v1$environment.cats <- factor(adopted_pre_2020_v1$environment.cats,c("TRUE","FALSE","NA"))
+adopted_pre_2020_v1$environment.dogs <- factor(adopted_pre_2020_v1$environment.dogs,c("TRUE","FALSE","NA"))
 
  
 # construct new columns
 #   adopted within a month: yes 1, no 0
+#   contact: email, phone, both 
 #   description: should we do a word count column + number of positive word used to describe pet column
 #   breed - pure breed/mixed (ie cat:domestic tabby calico, dog: pitty boxer )
 #   "desired breed": look up aspca or similar orgs for something like 
 #                    list of most popular, and top 5 label 1-5, others 0?
-#   contact: email, phone, both 
 #   
 
 adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
@@ -73,15 +79,16 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
                                   is.na(contact.phone) == FALSE & is.na(contact.email) == FALSE ~'both',
                                   TRUE ~ 'neither') )
 
-desc_length <- adopted_pre_2020_v1 %>%
-  mutate(descript = ifelse(is.na(description), '', description)) %>%
-  select(id, descript) %>%
-  unnest_tokens(word, descript) 
+description_count <- adopted_pre_2020_v1 %>% select(id,description) %>% unnest_tokens(word, description) 
+description_word_count <- description_count %>% group_by(id) %>% summarise(count = n())
+adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_word_count)%>% mutate(count = ifelse(is.na(description)==TRUE,0,count))
 
-word_count <- desc_length %>%
-  group_by(id) %>%
-  mutate(ct = ifelse())
-  count()
+sentiment_bing <- get_sentiments("bing")
+description_count <- inner_join(description_count,sentiment_bing) 
+description_sum <- description_count %>% group_by(id) %>% summarise(pos_count = sum(sentiment == "positive"),
+                                                                    neg_count = sum(sentiment == "negative"))
+
+adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_sum) 
 
 
 
