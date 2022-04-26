@@ -14,11 +14,10 @@ library(tidyverse)
 library(lubridate)
 library(tidytext)
 
-
 ### load data 
 
-cat_pre_2020 <- read_csv('./data/cat_before_2020.csv' )
-dog_pre_2020 <- read_csv('./data/dog_adopted_before_2020.csv' )
+cat_pre_2020 <- read_csv('./data/cat_2019_q4.csv' )
+dog_pre_2020 <- read_csv('./data/dog_2019_q4.csv' )
 
 adopted_all_pre_2020 <- rbind(cat_pre_2020, dog_pre_2020)
 
@@ -54,12 +53,29 @@ adopted_pre_2020_v1 <- adopted_pre_2020_full %>%
 #   size: small 1, medium 2, large 3, extra large 4 (as.factor)
 #   gender: male 1, female 2 (as.factor)
 #   environment.child/dog/cat: true 1, false 0, na--> uncertain 2 (as.factor)
-adopted_pre_2020_v1$age <- factor(adopted_pre_2020_v1$age,c("Baby","Young","Adult","Senior"))
-adopted_pre_2020_v1$size <- factor(adopted_pre_2020_v1$size,c("Small","Medium","Large","Extra Large"))
-adopted_pre_2020_v1$gender <- factor(adopted_pre_2020_v1$gender,c("Male","Female"))
-adopted_pre_2020_v1$environment.children <- factor(adopted_pre_2020_v1$environment.children,c("TRUE","FALSE","NA"))
-adopted_pre_2020_v1$environment.cats <- factor(adopted_pre_2020_v1$environment.cats,c("TRUE","FALSE","NA"))
-adopted_pre_2020_v1$environment.dogs <- factor(adopted_pre_2020_v1$environment.dogs,c("TRUE","FALSE","NA"))
+
+adopted_pre_2020_v1$age <- factor(adopted_pre_2020_v1$age, c("Baby", "Young", "Adult", "Senior"))
+adopted_pre_2020_v1$size <- factor(adopted_pre_2020_v1$size, c("Small", "Medium", "Large", "Extra Large"))
+adopted_pre_2020_v1$gender <- factor(adopted_pre_2020_v1$gender, c("Male", "Female"))
+
+# adopted_pre_2020_v1$environment.children[is.na(adopted_pre_2020_v1$environment.children)] <- 'UNKNOWN'
+# adopted_pre_2020_v1$environment.cats[is.na(adopted_pre_2020_v1$environment.cats)] <- 'UNKNOWN'
+# adopted_pre_2020_v1$environment.dogs[is.na(adopted_pre_2020_v1$environment.dogs)] <- 'UNKNOWN'
+
+# 
+# adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
+#   mutate(environment.children = as.factor(environment.children),
+#          environment.dogs = as.factor(environment.dogs),
+#          environment.cats = as.factor(environment.cats))
+
+adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
+  mutate(environment.children = as.factor(replace(environment.children, is.na(environment.children), 'UNKNOWN')),
+         environment.cats = as.factor(replace(environment.cats, is.na(environment.cats), 'UNKNOWN')),
+         environment.dogs = as.factor(replace(environment.dogs, is.na(environment.dogs), 'UNKNOWN')))
+
+# adopted_pre_2020_v1$environment.children <- factor(adopted_pre_2020_v1$environment.children,c("TRUE","FALSE","NA"))
+# adopted_pre_2020_v1$environment.cats <- factor(adopted_pre_2020_v1$environment.cats,c("TRUE","FALSE","NA"))
+# adopted_pre_2020_v1$environment.dogs <- factor(adopted_pre_2020_v1$environment.dogs,c("TRUE","FALSE","NA"))
 
  
 # construct new columns
@@ -87,8 +103,11 @@ adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_word_count)%>%
 
 sentiment_bing <- get_sentiments("bing")
 description_count <- inner_join(description_count,sentiment_bing) 
-description_sum <- description_count %>% group_by(id) %>% summarise(pos_count = sum(sentiment == "positive"),
-                                                                    neg_count = sum(sentiment == "negative"))
+
+description_sum <- description_count %>% 
+  group_by(id) %>% 
+  summarise(pos_count = sum(sentiment == "positive"),
+            neg_count = sum(sentiment == "negative"))
 
 adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_sum) 
 adopted_pre_2020_v1$pos_count[is.na(adopted_pre_2020_v1$pos_count)] <-0
@@ -144,8 +163,11 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
 #   filter(breeds_bin == 1, breeds.mixed == TRUE)
 
 # Keep 16 features and 1 outcome
-adopted_pre_2020_v1_test <- adopted_pre_2020_v1 %>% select(type,age,gender,size,attributes.spayed_neutered,attributes.house_trained,attributes.special_needs, 
-attributes.shots_current,environment.children,environment.dogs,environment.cats,contacts,count,pos_count,neg_count,breeds_bin,less_then_30_days)
+adopted_pre_2020_v1_cleaned <- adopted_pre_2020_v1 %>% 
+  select(type, age, gender, size, attributes.spayed_neutered, attributes.house_trained, attributes.special_needs, 
+         attributes.shots_current, environment.children, environment.dogs, environment.cats, contacts, count,
+         pos_count, neg_count, breeds_bin,less_then_30_days)
 
+# write_csv(adopted_pre_2020_v1_cleaned, './data/adopted_2019_q4_cleaned.csv')
 
 
