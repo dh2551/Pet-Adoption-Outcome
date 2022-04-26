@@ -81,7 +81,9 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
 
 description_count <- adopted_pre_2020_v1 %>% select(id,description) %>% unnest_tokens(word, description) 
 description_word_count <- description_count %>% group_by(id) %>% summarise(count = n())
-adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_word_count)%>% mutate(count = ifelse(is.na(description)==TRUE,0,count))
+#########
+adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_word_count)%>% 
+  mutate(count = ifelse(is.na(description)==TRUE,0,count)) %>% mutate(count = ifelse(is.na(count) == TRUE,0,count))
 
 sentiment_bing <- get_sentiments("bing")
 description_count <- inner_join(description_count,sentiment_bing) 
@@ -89,6 +91,8 @@ description_sum <- description_count %>% group_by(id) %>% summarise(pos_count = 
                                                                     neg_count = sum(sentiment == "negative"))
 
 adopted_pre_2020_v1 <- left_join(adopted_pre_2020_v1,description_sum) 
+adopted_pre_2020_v1$pos_count[is.na(adopted_pre_2020_v1$pos_count)] <-0
+adopted_pre_2020_v1$neg_count[is.na(adopted_pre_2020_v1$neg_count)] <-0
 
 
 # uncomment to check
@@ -139,7 +143,9 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
 # check <- breeds_binary %>%
 #   filter(breeds_bin == 1, breeds.mixed == TRUE)
 
-
+# Keep 16 features and 1 outcome
+adopted_pre_2020_v1_test <- adopted_pre_2020_v1 %>% select(type,age,gender,size,attributes.spayed_neutered,attributes.house_trained,attributes.special_needs, 
+attributes.shots_current,environment.children,environment.dogs,environment.cats,contacts,count,pos_count,neg_count,breeds_bin,less_then_30_days)
 
 
 
