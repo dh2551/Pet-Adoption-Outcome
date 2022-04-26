@@ -2,10 +2,12 @@
 ###
 ### author: Angela He & Mingyao Xu
 ### purpose: clean raw data for model fitting 
-### input: adopted_before_2020.csv 
-###        adopted_before_202x
-###        adopted_after_
-### output: adopted_before_2020_cleaned.csv
+### input: cat_2019_q4.csv 
+###        dog_2019_q4.csv
+###        cat_2020_q4.csv
+###        dog_2020_q4.csv
+### output: adopted_2019_q4_cleaned.csv
+###         adopted_2020_q4_cleaned.csv
 ###
 ################################################
 
