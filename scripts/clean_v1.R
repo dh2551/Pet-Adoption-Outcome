@@ -96,8 +96,10 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
 #   
 
 adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
-  mutate(duration_adopt = difftime(status_changed_at,published_at, unit="days"),
-         less_then_30_days = ifelse(duration_adopt < 30, 1, 0),
+  mutate(month_published = month(published_at),
+         year_published = year(published_at),
+         duration_adopt = difftime(status_changed_at,published_at, unit="days"),
+         less_than_30_days = ifelse(duration_adopt < 30, 1, 0),
          contacts = case_when(is.na(contact.phone) == TRUE & is.na(contact.email) == FALSE ~ 'email',
                                   is.na(contact.phone) == FALSE & is.na(contact.email) == TRUE ~ 'phone',
                                   is.na(contact.phone) == FALSE & is.na(contact.email) == FALSE ~'both',
@@ -174,10 +176,10 @@ adopted_pre_2020_v1 <- adopted_pre_2020_v1 %>%
 adopted_pre_2020_v1_cleaned <- adopted_pre_2020_v1 %>% 
   select(type, age, gender, size, attributes.spayed_neutered, attributes.house_trained, attributes.special_needs, 
          attributes.shots_current, environment.children, environment.dogs, environment.cats, contacts, count,
-         pos_count, neg_count, breeds_bin,less_then_30_days)
+         pos_count, neg_count, breeds_bin, month_published, year_published, less_than_30_days)
 
 
-# write_csv(adopted_pre_2020_v1_cleaned, './data/adopted_2019_q4_cleaned.csv')
+write_csv(adopted_pre_2020_v1_cleaned, './data/adopted_2019_q4_cleaned.csv')
 
 ############################################# 2020 ############################################# 
 adopted_2020_full <- adopted_all_post_2020 %>%
@@ -242,8 +244,10 @@ adopted_2020_v1 <- adopted_2020_v1 %>%
 #   
 
 adopted_2020_v1 <- adopted_2020_v1 %>%
-  mutate(duration_adopt = difftime(status_changed_at,published_at, unit="days"),
-         less_then_30_days = ifelse(duration_adopt < 30, 1, 0),
+  mutate(month_published = month(published_at),
+         year_published = year(published_at),
+         duration_adopt = difftime(status_changed_at,published_at, unit="days"),
+         less_than_30_days = ifelse(duration_adopt < 30, 1, 0),
          contacts = case_when(is.na(contact.phone) == TRUE & is.na(contact.email) == FALSE ~ 'email',
                               is.na(contact.phone) == FALSE & is.na(contact.email) == TRUE ~ 'phone',
                               is.na(contact.phone) == FALSE & is.na(contact.email) == FALSE ~'both',
@@ -321,9 +325,9 @@ adopted_2020_v1 <- adopted_2020_v1 %>%
 adopted_2020_v1_cleaned <- adopted_2020_v1 %>% 
   select(type, age, gender, size, attributes.spayed_neutered, attributes.house_trained, attributes.special_needs, 
          attributes.shots_current, environment.children, environment.dogs, environment.cats, contacts, count,
-         pos_count, neg_count, breeds_bin,less_then_30_days)
+         pos_count, neg_count, breeds_bin, month_published, year_published, less_than_30_days)
 
 
-# write_csv(adopted_2020_v1_cleaned, './data/adopted_2020_q4_cleaned.csv')
+write_csv(adopted_2020_v1_cleaned, './data/adopted_2020_q4_cleaned.csv')
 
 
