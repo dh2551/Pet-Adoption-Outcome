@@ -48,6 +48,28 @@ test.perf <- performance(test.pred, "auc")
 auc_glm2 <- test.perf@y.values[[1]]
 auc_glm2 # 0.65
 
+# Set 3
+model_glm3 <- glm(less_than_30_days~.,data = select(adopted_2019,count,pos_count,age,attributes.house_trained,size,less_than_30_days), family = binomial())
+
+test_glm3 <- adopted_2020  %>% mutate(predicted.probability =  
+                                        predict(model_glm3, adopted_2020, type='response'))
+
+test.pred <- prediction(test_glm3$predicted.probability, test_glm3$less_than_30_days)
+test.perf <- performance(test.pred, "auc")
+auc_glm3 <- test.perf@y.values[[1]]
+auc_glm3 # 0.62
+
+
+test_glm2<- test_glm2%>%
+  mutate(pred_5 = ifelse(predicted.probability >= 0.5, 1, 0))
+confusionMatrix(as.factor(test_glm2$pred_5),as.factor(test_glm2$less_than_30_days))
+
+test_glm3<- test_glm3%>%
+  mutate(pred_5 = ifelse(predicted.probability >= 0.5, 1, 0))
+confusionMatrix(as.factor(test_glm3$pred_5),as.factor(test_glm3$less_than_30_days))
+
+anova(model_glm2,model_glm3,test="F")
+compareGLM(model_glm2,model_glm3) # More research
 ###########################Lasso################################
 # Set 1
 train_lasso1 <- train_2019 %>% select(-less_than_30_days)
@@ -62,33 +84,24 @@ model_lasso1 <- glmnet(train_lasso1,train_lasso1_outcome,alpha = 1, lambda = l1)
 coef(model_lasso1)
 # None of predictor is dropped
 
-test_lasso1 <- test_2019 %>% select(-less_than_30_days)
-test_lasso1 <- data.matrix(test_lasso1)
-test_lasso1_outcome <- test_2019$less_than_30_days
-test_lasso1_outcome <- data.matrix(test_lasso1_outcome)
-result_lasso1 <- predict(model_lasso1,s=l1,newx = test_lasso1)
 
-test.pred <- prediction(result_lasso1, test_lasso1_outcome)
-test.perf <- performance(test.pred, "auc")
-auc_lasso1 <- test.perf@y.values[[1]]
-auc_lasso1 # 0.61
 # Set 2
-test_2019 <- adopted_2019 %>% select(-less_than_30_days)
-test_2019 <- data.matrix(test)
+test_2019_list <- adopted_2019 %>% select(-less_than_30_days)
+test_2019_list <- data.matrix(test_2019_list )
 test_2019_outcome <- adopted_2019$less_than_30_days
 test_2019_outcome <- data.matrix(test_2019_outcome)
 
-cv_model <-cv.glmnet(test_2019,test_2019_outcome,alpha =1)
+cv_model <-cv.glmnet(test_2019_list,test_2019_outcome,alpha =1)
 l2 <- cv_model$lambda.min
 
-model_lasso2 <- glmnet(test_2019,test_2019_outcome,alpha = 1, lambda = l2)
+model_lasso2 <- glmnet(test_2019_list,test_2019_outcome,alpha = 1, lambda = l2)
 coef(model_lasso2)
 # environment.children is dropped
 
-test_2020 <- adopted_2020 %>% select(-less_than_30_days)
-test_2020 <- data.matrix(test_2020)
+test_2020_list <- adopted_2020 %>% select(-less_than_30_days)
+test_2020_list <- data.matrix(test_2020_list)
 test_2020_outcome <- adopted_2020$less_than_30_days
-result_2020<- predict(model_lasso,s=l2,newx = test_2020)
+result_2020<- predict(model_lasso2,s=l2,newx = test_2020_list)
 
 test.pred <- prediction(result_2020, test_2020_outcome)
 test.perf <- performance(test.pred, "auc")
@@ -123,6 +136,30 @@ p1_glm_lasso <- p1_glm_lasso + scale_x_log10('\nPercent of pets', limits=c(0.003
                                              labels=c('0.3%','1%','3%','10%','30%','100%'))
 p1_glm_lasso <- p1_glm_lasso + scale_y_continuous("Percent of pets aopted within 30 days", limits=c(0, 1), labels=scales::percent)
 p1_glm_lasso
+
+
+
+################################GLM TEST
+plot.data_glm2 <- test_glm2  %>% arrange( desc(predicted.probability) ) %>%
+  mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
+         perc = nums/n()) %>% select(perc, percent.outcome)
+
+plot.data_glm3 <- test_glm3  %>% arrange( desc(predicted.probability) ) %>%
+  mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
+         perc = nums/n()) %>% select(perc, percent.outcome)
+
+
+plot.data_glm2$group <- "glm2"
+plot.data_glm3$group <- "glm3"
+p1_glm_comb<- rbind(plot.data_glm2,plot.data_glm3)
+
+p1_glm_comb <- ggplot(data=p1_glm_comb, aes(x=perc, y=percent.outcome,color = group))
+p1_glm_comb <- p1_glm_comb + geom_line() + ggtitle("Recall-at-k% plot")
+p1_glm_comb <- p1_glm_comb + scale_x_log10('\nPercent of pets', limits=c(0.003, 1), breaks=c(.003,.01,.03,.1,.3,1),
+                                             labels=c('0.3%','1%','3%','10%','30%','100%'))
+p1_glm_comb <- p1_glm_comb + scale_y_continuous("Percent of pets aopted within 30 days", limits=c(0, 1), labels=scales::percent)
+p1_glm_comb
+
 
 #######################################CALIBRATION PLOT ##################################################
 
