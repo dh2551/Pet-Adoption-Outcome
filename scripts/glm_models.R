@@ -11,6 +11,8 @@ library(tidyverse)
 library(lubridate)
 library(glmnet)
 library(ROCR)
+library(caret)
+library(rcompanion)
 
 adopted_2019 <- read_csv('./data/adopted_2019_q4_cleaned.csv' )
 adopted_2020 <- read_csv('./data/adopted_2020_q4_cleaned.csv' )
@@ -21,17 +23,6 @@ train_2019 <- adopted_2019 %>%
 
 test_2019 <- adopted_2019 %>% filter(month_published == 12)%>% select(-month_published, - year_published)
 
-
-
-train_2019_cat <- train_2019 %>% filter(type == "Cat") %>% select(-type)
-train_2019_dog <- train_2019 %>% filter(type == "Dog")%>% select(-type)
-test_2019_cat <- test_2019 %>% filter(type == "Cat")
-test_2019_cat <- test_2019 %>% filter(type == "Dog")
-
-model_test <- glm(less_than_30_days~.,data = train_2019_cat, family = binomial())
-summary(model_test)
-model_test2 <- glm(less_than_30_days~.,data = train_2019_dog, family = binomial())
-summary(model_test2)
 # Train/Test set 2
 
 adopted_2019 <- adopted_2019 %>% select(-month_published, - year_published)
@@ -60,27 +51,26 @@ auc_glm2 <- test.perf@y.values[[1]]
 auc_glm2 # 0.65
 
 # Set 3
-model_glm3 <- glm(less_than_30_days~.,data = select(adopted_2019,count,pos_count,age,attributes.house_trained,size,less_than_30_days), family = binomial())
+model_glm3 <- glm(less_than_30_days~.,data = select(train_2019,attributes.house_trained,age,environment.cats,contacts,breeds_bin,less_than_30_days), family = binomial())
 
-test_glm3 <- adopted_2020  %>% mutate(predicted.probability =  
-                                        predict(model_glm3, adopted_2020, type='response'))
+test_glm3 <- test_2019  %>% mutate(predicted.probability =  
+                                        predict(model_glm3, test_2019, type='response'))
 
 test.pred <- prediction(test_glm3$predicted.probability, test_glm3$less_than_30_days)
 test.perf <- performance(test.pred, "auc")
 auc_glm3 <- test.perf@y.values[[1]]
-auc_glm3 # 0.62
+auc_glm3 # 0.65
 
 
-test_glm2<- test_glm2%>%
+test_glm1<- test_glm1%>%
   mutate(pred_5 = ifelse(predicted.probability >= 0.5, 1, 0))
-confusionMatrix(as.factor(test_glm2$pred_5),as.factor(test_glm2$less_than_30_days))
+confusionMatrix(as.factor(test_glm1$pred_5),as.factor(test_glm1$less_than_30_days))
 
 test_glm3<- test_glm3%>%
   mutate(pred_5 = ifelse(predicted.probability >= 0.5, 1, 0))
 confusionMatrix(as.factor(test_glm3$pred_5),as.factor(test_glm3$less_than_30_days))
 
-anova(model_glm2,model_glm3,test="F")
-compareGLM(model_glm2,model_glm3) # More research
+compareGLM(model_glm1,model_glm3)
 ###########################Lasso################################
 # Set 1
 train_lasso1 <- train_2019 %>% select(-less_than_30_days)
@@ -95,6 +85,15 @@ model_lasso1 <- glmnet(train_lasso1,train_lasso1_outcome,alpha = 1, lambda = l1)
 coef(model_lasso1)
 # None of predictor is dropped
 
+test_2019_list <- test_2019 %>% select(-less_than_30_days)
+test_2019_list <- data.matrix(test_2019_list)
+test_2019_outcome <- test_2019$less_than_30_days
+result_2019<- predict(model_lasso1,s=l1,newx = test_2019_list)
+
+test.pred <- prediction(result_2019, test_2019_outcome)
+test.perf <- performance(test.pred, "auc")
+auc_lasso1 <- test.perf@y.values[[1]]
+auc_lasso1 # 0.61
 
 # Set 2
 test_2019_list <- adopted_2019 %>% select(-less_than_30_days)
@@ -119,18 +118,14 @@ test.perf <- performance(test.pred, "auc")
 auc_lasso2 <- test.perf@y.values[[1]]
 auc_lasso2 # 0.60
 
-
-#######COMPARISON######
-#????????????????????????
-anova(model_glm1,model_lasso1)
-#######################################recall-at-k%####################################################
+#######################################RECALL AT K% GLM & LASSO################################################
 # recall-at-k% plot glm set1
 plot.data_glm <- test_glm1  %>% arrange( desc(predicted.probability) ) %>%
   mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
          perc = nums/n()) %>% select(perc, percent.outcome)
 
 # recall-at-k% plot lasso set1
-test_2019$predicted.probability <- result_lasso1
+test_2019$predicted.probability <- result_2019
 plot.data_lasso <- test_2019  %>% arrange( desc(predicted.probability) ) %>%
   mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
          perc = nums/n()) %>% select(perc, percent.outcome)
@@ -148,10 +143,8 @@ p1_glm_lasso <- p1_glm_lasso + scale_x_log10('\nPercent of pets', limits=c(0.003
 p1_glm_lasso <- p1_glm_lasso + scale_y_continuous("Percent of pets aopted within 30 days", limits=c(0, 1), labels=scales::percent)
 p1_glm_lasso
 
-
-
-################################GLM TEST
-plot.data_glm2 <- test_glm2  %>% arrange( desc(predicted.probability) ) %>%
+#######################################RECALL AT K% GLM1 & 3################################################
+plot.data_glm1 <- test_glm1  %>% arrange( desc(predicted.probability) ) %>%
   mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
          perc = nums/n()) %>% select(perc, percent.outcome)
 
@@ -159,10 +152,9 @@ plot.data_glm3 <- test_glm3  %>% arrange( desc(predicted.probability) ) %>%
   mutate(nums = row_number(), percent.outcome = cumsum(less_than_30_days)/sum(less_than_30_days),
          perc = nums/n()) %>% select(perc, percent.outcome)
 
-
-plot.data_glm2$group <- "glm2"
+plot.data_glm1$group <- "glm1"
 plot.data_glm3$group <- "glm3"
-p1_glm_comb<- rbind(plot.data_glm2,plot.data_glm3)
+p1_glm_comb<- rbind(plot.data_glm1,plot.data_glm3)
 
 p1_glm_comb <- ggplot(data=p1_glm_comb, aes(x=perc, y=percent.outcome,color = group))
 p1_glm_comb <- p1_glm_comb + geom_line() + ggtitle("Recall-at-k% plot")
@@ -171,34 +163,31 @@ p1_glm_comb <- p1_glm_comb + scale_x_log10('\nPercent of pets', limits=c(0.003, 
 p1_glm_comb <- p1_glm_comb + scale_y_continuous("Percent of pets aopted within 30 days", limits=c(0, 1), labels=scales::percent)
 p1_glm_comb
 
+#######################################CALIBRATION PLOT ##########################################
 
-#######################################CALIBRATION PLOT ##################################################
-
-plot.data_glm_cali <- test_glm1 %>% mutate(calibration = round(100*predicted.probability)) %>%
+plot.data_glm1_cali <- test_glm1 %>% mutate(calibration = round(100*predicted.probability)) %>%
   group_by(calibration) %>% summarize(model.estimate = mean(predicted.probability),
                                       nums = n(),
                                       empirical.estimate = mean(less_than_30_days))
+plot.data_glm3_cali <- test_glm3 %>% mutate(calibration = round(100*predicted.probability)) %>%
+  group_by(calibration) %>% summarize(model.estimate = mean(predicted.probability),
+                                      nums = n(),
+                                      empirical.estimate = mean(less_than_30_days))
+plot.data_glm1_cali$group <- "glm1"
+plot.data_glm3_cali$group <- "glm3"
 
-p2 <- ggplot(data = plot.data_glm_cali, aes(y=empirical.estimate, x=model.estimate))
+plot.data_cali <-rbind(plot.data_glm1_cali,plot.data_glm3_cali)
+
+p2 <- ggplot(data = plot.data_cali, aes(y=empirical.estimate, x=model.estimate,color = group))
 p2 <- p2 + geom_point(alpha=0.5, aes(size=nums)) + ggtitle("Calibration Plot")
 p2 <- p2 + scale_size_area(guide='none', max_size=15)
 p2 <- p2 + geom_abline(intercept=0, slope=1, linetype="dashed")
-p2 <- p2 + scale_y_log10('Empirical probability \n', limits=c(.001,1), breaks=c(.001,.003,.01,.03,.1,.3,1),
-                         labels=c('0.1%','0.3%','1%','3%','10%','30%','100%'))
-p2 <- p2 + scale_x_log10('\nModel estimated probability', limits=c(.001,1), breaks=c(.001,.003,.01,.03,.1,.3,1),
-                         labels=c('0.1%','0.3%','1%','3%','10%','30%','100%'))
+p2 <- p2 +scale_y_log10('Empirical probability \n', limits=c(.1,1), breaks=c(.1,.5,1),
+                        labels=c('10%','50%','100%'))
+p2 <- p2 + scale_x_log10('\nModel estimated probability', limits=c(.1,1), breaks=c(.1,.5,1),
+                         labels=c('10%','50%','100%'))
 p2
 #ggsave(plot = p2, path = "../figures", filename = "calibration.png",height=5, width=5)
-
-p_test <- ggplot(data = plot.data_glm_cali, aes(y=empirical.estimate, x=model.estimate))
-p_test <- p_test + geom_point(alpha=0.5, aes(size=nums)) + ggtitle("Calibration Plot")
-p_test <- p_test + scale_size_area(guide='none', max_size=15)
-p_test <- p_test + geom_abline(intercept=0, slope=1, linetype="dashed")
-p_test <- p_test + scale_y_log10('Empirical probability \n', limits=c(.1,1), breaks=c(.1,.5,1),
-                         labels=c('10%','50%','100%'))
-p_test <- p_test + scale_x_log10('\nModel estimated probability', limits=c(.1,1), breaks=c(.1,.5,1),
-                         labels=c('10%','50%','100%'))
-p_test
 
 
 
