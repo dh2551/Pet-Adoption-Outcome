@@ -21,6 +21,17 @@ train_2019 <- adopted_2019 %>%
 
 test_2019 <- adopted_2019 %>% filter(month_published == 12)%>% select(-month_published, - year_published)
 
+
+
+train_2019_cat <- train_2019 %>% filter(type == "Cat") %>% select(-type)
+train_2019_dog <- train_2019 %>% filter(type == "Dog")%>% select(-type)
+test_2019_cat <- test_2019 %>% filter(type == "Cat")
+test_2019_cat <- test_2019 %>% filter(type == "Dog")
+
+model_test <- glm(less_than_30_days~.,data = train_2019_cat, family = binomial())
+summary(model_test)
+model_test2 <- glm(less_than_30_days~.,data = train_2019_dog, family = binomial())
+summary(model_test2)
 # Train/Test set 2
 
 adopted_2019 <- adopted_2019 %>% select(-month_published, - year_published)
