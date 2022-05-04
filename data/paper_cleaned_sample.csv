@@ -1,0 +1,6 @@
+type,age,gender,size,attributes.spayed_neutered,attributes.house_trained,attributes.special_needs,attributes.shots_current,environment.children,environment.dogs,environment.cats,contacts,count,pos_count,neg_count,breeds_bin,month_published,year_published,less_than_30_days
+Cat,Baby,Female,Medium,TRUE,TRUE,FALSE,TRUE,TRUE,TRUE,TRUE,email,20,0,0,1,10,2020,1
+Dog,Baby,Male,Medium,FALSE,FALSE,FALSE,TRUE,TRUE,TRUE,TRUE,email,22,2,0,0,11,2020,0
+Dog,Adult,Male,Medium,TRUE,FALSE,FALSE,TRUE,TRUE,UNKNOWN,UNKNOWN,both,20,1,0,1,12,2020,1
+Cat,Young,Male,Medium,FALSE,FALSE,FALSE,FALSE,TRUE,UNKNOWN,UNKNOWN,both,21,0,0,0,12,2020,1
+Cat,Baby,Male,Small,TRUE,TRUE,FALSE,TRUE,UNKNOWN,UNKNOWN,UNKNOWN,email,25,0,0,0,10,2020,1
