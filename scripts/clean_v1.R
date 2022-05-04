@@ -331,3 +331,8 @@ adopted_2020_v1_cleaned <- adopted_2020_v1 %>%
 write_csv(adopted_2020_v1_cleaned, './data/adopted_2020_q4_cleaned.csv')
 
 
+# for_paper <- adopted_2020_v1_cleaned %>% 
+#   sample_n(5)
+# 
+# write_csv(for_paper, './data/paper_cleaned_sample.csv')
+
