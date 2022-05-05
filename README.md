@@ -36,7 +36,7 @@ With more and more shelters starting to post their available animals online, we 
     * calibration_glm_lasso.png
 
 ## Help
-contact @dh2551 or @mingyaoemily for any question 
+contact [@dh2551](https://github.com/dh2551) or [@mingyaoemily](https://github.com/mingyaoemily) for any question 
 
 ## Author
 Angela He 
