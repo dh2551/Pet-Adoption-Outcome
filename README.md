@@ -7,10 +7,7 @@ With more and more shelters starting to post their available animals online, we 
 
   Download R project and create respective folder. Run the code following the order of the code below:
 
-    1.scrape.R 
-    2.clean_v1.R
-    3.tree_models.R
-    4.glm_models.R
+    1.scrape.R.  2.clean_v1.R.  3.tree_models.R.  4.glm_models.R 
 
 ## Folders
 * data 
