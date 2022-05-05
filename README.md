@@ -18,7 +18,7 @@ With more and more shelters starting to post their available animals online, we 
     * adopted_2019_q4_cleaned.csv
     * adopted_2020_q4_cleaned.csv
     * archive (tests)
-* scritps
+* scripts
     * scrape.R 
     * clean_v1.R
     * tree_models.R
