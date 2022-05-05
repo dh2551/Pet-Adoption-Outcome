@@ -137,6 +137,8 @@ p1_glm_lasso <- p1_glm_lasso + scale_x_log10('\nPercent of pets', limits=c(0.003
 p1_glm_lasso <- p1_glm_lasso + scale_y_continuous("Recall", limits=c(0, 1), labels=scales::percent)
 p1_glm_lasso
 
+# ggsave(filename = './figures/recall_at_k_glm_lasso.png', plot = p1_glm_lasso )
+
 #######################################RECALL AT K% GLM1 & 3################################################
 # Plot data for glm1
 plot.data_glm1 <- test_glm1  %>% arrange( desc(predicted.probability) ) %>%
@@ -158,6 +160,8 @@ p1_glm_comb <- p1_glm_comb + scale_x_log10('\nPercent of pets', limits=c(0.003, 
                                              labels=c('0.3%','1%','3%','10%','30%','100%'))
 p1_glm_comb <- p1_glm_comb + scale_y_continuous("Percent of pets aopted within 30 days", limits=c(0, 1), labels=scales::percent)
 p1_glm_comb
+
+# ggsave(filename = './figures/recall_at_k_glm1&3.png', plot = p1_glm_comb )
 
 #######################################CALIBRATION PLOT GLM1 AND LASSO ##########################################
 # Plot data for glm1
@@ -189,7 +193,7 @@ p2 <- p2 + scale_x_log10('\nModel estimated probability', limits=c(.1,1), breaks
                          labels=c('10%','50%','100%'))
 p2
 
-
+# ggsave(filename = './figures/calibration_glm_lasso.png', plot = p2 )
 
 
 

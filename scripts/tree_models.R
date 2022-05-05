@@ -188,17 +188,22 @@ rf_precision_plot_4 <- test_2020_1_rf %>%
          percent_outcome = real_outcome/numrest)
 
   
-dev.off()
-ggplot() + 
-  geom_line(data = rf_precision_plot_1, aes(x=numrest, y=percent_outcome), color = 'red') +    # method 1 2019
-  geom_line(data = rf_precision_plot_2, aes(x=numrest, y=percent_outcome), color = 'black') +  # 80/20 split. 2019
-  labs(x= 'Number of Animals', y = 'Model Precision', title = 'Precision at k curve') 
-  
-ggplot() + 
-  geom_line(data = rf_precision_plot_3, aes(x=numrest, y=percent_outcome), color = 'red') +    # method 1 2020
-  geom_line(data = rf_precision_plot_4, aes(x=numrest, y=percent_outcome), color = 'black') +  # 80/20 split 2020
-  labs(x= 'Number of Animals', y = 'Model Precision', title = 'Precision at k curve')
 
+precision_rf_1 <- ggplot() + 
+  geom_line(data = rf_precision_plot_1, aes(x=numrest, y=percent_outcome, color = "method1")) +    # method 1 2019
+  geom_line(data = rf_precision_plot_2, aes(x=numrest, y=percent_outcome, color = "method2")) +  # 80/20 split. 2019
+  labs(x= 'Number of Animals', y = 'Model Precision', title = 'Precision at k curve') +
+  scale_color_manual(values = c("method1" = "darkblue", "method2" = "indianred"), name = "methods") 
+
+# ggsave(filename = './figures/precision_rf_2019.png', plot = precision_rf_1)
+
+precision_rf_2 <- ggplot() + 
+  geom_line(data = rf_precision_plot_3, aes(x=numrest, y=percent_outcome, color = "method1")) +    # method 1 2020
+  geom_line(data = rf_precision_plot_4, aes(x=numrest, y=percent_outcome, color = "method2")) +  # 80/20 split 2020
+  labs(x= 'Number of Animals', y = 'Model Precision', title = 'Precision at k curve') + 
+  scale_color_manual(values = c("method1" = "darkblue", "method2" = "indianred"), name = "methods") 
+
+# ggsave(filename = './figures/precision_rf_2020.png', plot = precision_rf_2)
 
 ###
 
@@ -219,7 +224,7 @@ train_2019_xgb <- select(train_2019, -less_than_30_days)
 test_2019_xgb <- select(test_2019, -less_than_30_days)
 
 
-set.seed(1234)
+
 fit_xgb_1 <- xgboost(data = data.matrix(train_2019_xgb), 
                      label = train_2019$less_than_30_days, 
                      max.depth = 5, eta = .5, min_child_weigth = 2,  nrounds = 30,
@@ -235,7 +240,7 @@ print(importance_matrix)
 
 png('./figures/xgb_importance_plot.png', width = 960, height = 640)
 xgb.plot.importance(importance_matrix = importance_matrix)
-dev.off()
+
 
 xgb_pred_prob_1_5 <- ifelse(xgb_pred_prob_1 >= 0.5, 1, 0)
 
@@ -265,9 +270,11 @@ xgb_precision_plot <- xgb_plot_dat %>%
          percent_outcome = real_outcome/numrest)
 
    
-ggplot() + 
+precision_xgb <- ggplot() + 
   geom_line(data = xgb_precision_plot, aes(x=numrest, y=percent_outcome), color = 'red') +
   labs(x= 'Number of Animals', y = 'Model Precision', title = 'Precision at k curve')
+
+# ggsave(filename = './figures/precision_xgb.png', plot = precision_xgb)
 
 # #### fine tuning 
 # 
