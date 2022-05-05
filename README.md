@@ -14,12 +14,12 @@ With more and more shelters starting to post their available animals online, we 
 
 ## Folders
 * data 
-    * cat_2019_q4
-    * dog_2019_q4
-    * cat_2020_q4
-    * dog_2020_q4
-    * adopted_2019_q4_cleaned
-    * adopted_2020_q4_cleaned
+    * cat_2019_q4.csv
+    * dog_2019_q4.csv
+    * cat_2020_q4.csv
+    * dog_2020_q4.csv
+    * adopted_2019_q4_cleaned.csv
+    * adopted_2020_q4_cleaned.csv
     * archive (tests)
 * scritps
     * scrape.R 
